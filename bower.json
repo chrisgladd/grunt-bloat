@@ -1,0 +1,25 @@
+{
+  "name": "grunt-bower-depend",
+  "version": "0.1.2",
+  "homepage": "https://github.com/chrisgladd/grunt-bower-depend",
+  "authors": [
+    "Chris Gladd <cmg301@gmail.com>"
+  ],
+  "description": "Bower Dependency Management",
+  "keywords": [
+    "bower",
+    "install",
+    "dependencies"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.0.3"
+  }
+}
