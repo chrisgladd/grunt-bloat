@@ -21,6 +21,7 @@ module.exports = function(grunt) {
   var used = {};
   var available = {};
   var done = null;
+  var htmlRegex = [];
 
   // Please see the Grunt documentation for more information regarding task
   // creation: http://gruntjs.com/creating-tasks
@@ -34,7 +35,6 @@ module.exports = function(grunt) {
     //Asynchonous onFinish function for grunt
     done = this.async();
     files = this.files;
-    console.log(files);
 
     var sheets = grunt.file.expandMapping(options.stylesheets);
     var fileData = this.data;
@@ -101,10 +101,32 @@ module.exports = function(grunt) {
   var searchHTMLFile = function(line, classes){
       var found = [];
 
-      //Look for in the template templates
-      var foundClasses = /\sclass\=\"(.*)\"(?=\s|>)/g.exec(line);
+      //Look for class="anything" in the template templates
+      var foundClasses = /\sclass\=\"([^"]*)\"(?=\s|>)/g.exec(line);
       if(foundClasses && foundClasses.length > 1){
-          found = found.concat(splitHTMLClasses(foundClasses[1]));
+          var classes = foundClasses[1];
+
+          //These could contain angular stuff {{ anything }}
+          if(/\{\{(.*)\}\}/g.test(classes)){
+              var dynamic = /\{\{(.*)\}\}/g.exec(classes);
+              classes = classes.replace(dynamic[0], "")
+              var split = dynamic[1].split("||");
+
+              var nc = "";
+              split.map(function(d, i){
+                  var inner = /\'(.*)\'/g.exec(d);
+                  if(inner && inner.length > 1){
+                      if(i){ nc += " "; }
+                      nc += classes + inner[1];
+                  }
+              });
+              classes = nc;
+          }
+
+          classes = classes.trim();
+          htmlRegex.push(classes);
+
+          found = found.concat(splitHTMLClasses(classes));
       }
 
       //Look for classes from data-ng-class 
@@ -189,6 +211,9 @@ module.exports = function(grunt) {
       grunt.log.writeln("Available Classes: " + availableCount);
       grunt.log.writeln("Used Classes: " + usedCount);
       grunt.log.writeln("Percentage Unused: " + ~~((availableCount - usedCount) * 100 / availableCount));
+
+      var htmlFile = htmlRegex.join(grunt.util.linefeed);
+      grunt.file.write("css/bloat.html.css", htmlFile);
 
       var unused = out.join(grunt.util.linefeed);
       grunt.file.write(options.unused || "css/bloat.unused.css", unused);
